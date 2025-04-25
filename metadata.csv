@@ -1,0 +1,4 @@
+name,description,image,attributes
+Cool Cat #1,A very cool cat.,ipfs://QmImageHash1,[{"trait_type":"Color","value":"Blue"},{"trait_type":"Mood","value":"Happy"}]
+Cool Cat #2,A chill cat.,ipfs://QmImageHash2,[{"trait_type":"Color","value":"Green"},{"trait_type":"Mood","value":"Sleepy"}]
+Cool Cat #3,A curious cat.,ipfs://QmImageHash3,[{"trait_type":"Color","value":"Orange"},{"trait_type":"Mood","value":"Curious"}]
