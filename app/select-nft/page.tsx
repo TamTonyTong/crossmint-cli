@@ -17,6 +17,20 @@ const ERC1155_INTERFACE = new ethers.Interface([
   "function uri(uint256 id) external view returns (string memory)",
 ])
 
+// Sepolia testnet configuration
+const SEPOLIA_CHAIN_ID = '0xaa36a7'  // Chain ID for Sepolia in hex
+const SEPOLIA_CONFIG = {
+  chainId: SEPOLIA_CHAIN_ID,
+  chainName: 'Sepolia',
+  rpcUrls: ['https://sepolia.infura.io/v3/YOUR_INFURA_KEY', 'https://rpc.sepolia.org'],
+  nativeCurrency: {
+    name: 'Sepolia Ether',
+    symbol: 'SEP',
+    decimals: 18,
+  },
+  blockExplorerUrls: ['https://sepolia.etherscan.io'],
+}
+
 export default function SelectNFT() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -29,139 +43,198 @@ export default function SelectNFT() {
     uri: string;
   }>>([])
   const [selectedNft, setSelectedNft] = useState<number | null>(null)
+  const [networkName, setNetworkName] = useState<string>('')
+  const [walletConnected, setWalletConnected] = useState(false)
   
+  // Add a check for wallet connection as soon as component mounts
   useEffect(() => {
-    async function checkConnection() {
+    async function checkWalletConnection() {
       if (typeof window.ethereum === 'undefined') {
-        setError('MetaMask is not installed. Please go back and connect your wallet.')
-        setLoading(false)
-        return false
+        router.push('/connection')
+        return
       }
       
       try {
         const accounts = await window.ethereum.request({ method: 'eth_accounts' })
         if (accounts.length === 0) {
-          setError('No wallet connected. Please go back and connect your MetaMask wallet.')
-          setLoading(false)
-          return false
+          // No wallet connected, redirect to connection page
+          router.push('/connection')
+          return
         }
-        return true
-      } catch (err: any) {
-        setError(err.message || 'Failed to check wallet connection')
-        setLoading(false)
-        return false
+        
+        setWalletConnected(true)
+      } catch (err) {
+        console.error('Error checking wallet connection:', err)
+        router.push('/connection')
       }
     }
     
-    async function fetchNFTs() {
-      const connected = await checkConnection()
-      if (!connected) return
+    checkWalletConnection()
+  }, [router])
+  
+  // Function to ensure we're on Sepolia network
+  async function ensureSepoliaNetwork() {
+    if (!window.ethereum) return false
+    
+    try {
+      // Check current network
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' })
       
+      if (chainId !== SEPOLIA_CHAIN_ID) {
+        try {
+          // Try to switch to Sepolia
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: SEPOLIA_CHAIN_ID }],
+          })
+          return true
+        } catch (switchError: any) {
+          // This error code indicates that the chain has not been added to MetaMask
+          if (switchError.code === 4902) {
+            try {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [SEPOLIA_CONFIG],
+              })
+              return true
+            } catch (addError) {
+              setError('Failed to add Sepolia network to MetaMask')
+              return false
+            }
+          } else {
+            setError('Failed to switch to Sepolia network')
+            return false
+          }
+        }
+      }
+      
+      // Update network name display
+      setNetworkName('Sepolia')
+      return true
+    } catch (error) {
+      console.error('Error ensuring Sepolia network:', error)
+      return false
+    }
+  }
+  
+  // Mock NFT data that will be used directly
+  const mockNftData = [
+    {
+      contractAddress: "0x76BE3b62873462d2142405439777e971754E8E77",
+      tokenId: "1",
+      balance: "1",
+      metadata: {
+        name: "Example NFT #1",
+        description: "This is a mock NFT for development",
+        image: "https://picsum.photos/seed/nft1/400/400"
+      },
+      uri: "https://example.com/mock/1"
+    },
+    {
+      contractAddress: "0x76BE3b62873462d2142405439777e971754E8E77",
+      tokenId: "2",
+      balance: "3",
+      metadata: {
+        name: "Collector's Edition NFT",
+        description: "A rare mock NFT for front-end testing",
+        image: "https://picsum.photos/seed/nft2/400/400"
+      },
+      uri: "https://example.com/mock/2"
+    },
+    {
+      contractAddress: "0x495f947276749Ce646f68AC8c248420045cb7b5e",
+      tokenId: "3",
+      balance: "2",
+      metadata: {
+        name: "Development Asset #42",
+        description: "Mock NFT asset for UI development",
+        image: "https://picsum.photos/seed/nft3/400/400"
+      },
+      uri: "https://example.com/mock/3"
+    },
+    {
+      contractAddress: "0x495f947276749Ce646f68AC8c248420045cb7b5e",
+      tokenId: "4",
+      balance: "1",
+      metadata: {
+        name: "Front-end Test NFT",
+        description: "Another mock NFT for UI testing",
+        image: "https://picsum.photos/seed/nft4/400/400"
+      },
+      uri: "https://example.com/mock/4"
+    }
+  ]
+  
+  useEffect(() => {
+    // Only proceed if wallet is connected
+    if (!walletConnected) return
+    
+    async function initializeDisplay() {
       try {
         setLoading(true)
         
-        // Get the current wallet address
-        const accounts = await window.ethereum.request({ method: 'eth_accounts' })
-        const address = accounts[0]
-        
-        // Create ethers provider from MetaMask
-        const provider = new ethers.providers.Web3Provider(window.ethereum)
-        
-        // This would typically be a backend API call to fetch all ERC1155 contracts owned by the user
-        // For demonstration, we'll use a mock service or direct chain queries
-        
-        // Example query to Moralis or Alchemy could go here
-        // For demo purposes, let's assume we get these contract addresses 
-        // (In a real app, you would query an indexer API)
-        const erc1155Contracts = [
-          // These are example contract addresses - replace with real ones
-          "0x76BE3b62873462d2142405439777e971754E8E77",
-          "0x495f947276749Ce646f68AC8c248420045cb7b5e" // OpenSea Shared Storefront
-        ]
-        
-        const nftData = []
-        
-        for (const contractAddress of erc1155Contracts) {
-          const contract = new ethers.Contract(
-            contractAddress,
-            ERC1155_INTERFACE,
-            provider
-          )
-          
-          // In a real app, you'd need to know which tokenIds to query
-          // This would typically come from an indexer like Moralis, Alchemy, or The Graph
-          // For demonstration, we'll mock some token IDs
-          const mockTokenIds = ["1", "2", "3"]
-          
-          // Create arrays for batch balance checking
-          const accounts = mockTokenIds.map(() => address)
-          const tokenIds = mockTokenIds.map(id => ethers.BigNumber.from(id))
-          
-          // Get balances for all tokens at once
-          const balances = await contract.balanceOfBatch(accounts, tokenIds)
-          
-          // Process the results
-          for (let i = 0; i < mockTokenIds.length; i++) {
-            const balance = balances[i]
-            if (balance.gt(0)) {
-              // Token is owned by the user
-              const tokenId = mockTokenIds[i]
-              let uri = ""
-              let metadata = {}
-              
-              try {
-                // Get the token URI
-                uri = await contract.uri(tokenId)
-                
-                // Replace ipfs:// with https gateway if needed
-                const formattedUri = uri.replace('ipfs://', 'https://ipfs.io/ipfs/')
-                
-                // Replace any token ID placeholders in the URI string
-                // Some ERC1155 contracts use {id} placeholder in the URI
-                const tokenIdHex = ethers.utils.hexZeroPad(ethers.BigNumber.from(tokenId).toHexString(), 32).slice(2)
-                const fullUri = formattedUri.replace('{id}', tokenIdHex)
-                
-                // Fetch metadata
-                const response = await fetch(fullUri)
-                if (response.ok) {
-                  metadata = await response.json()
-                }
-              } catch (e) {
-                console.error("Failed to fetch metadata for token", tokenId, e)
-                metadata = { name: `Token #${tokenId}`, description: "Metadata unavailable" }
-              }
-              
-              nftData.push({
-                contractAddress,
-                tokenId,
-                balance: balance.toString(),
-                metadata,
-                uri
-              })
-            }
-          }
+        // Ensure we're on Sepolia
+        const onSepolia = await ensureSepoliaNetwork()
+        if (!onSepolia) {
+          setLoading(false)
+          return
         }
         
-        setNfts(nftData)
-        
+        // Display the mock NFT data directly
+        setNfts(mockNftData)
+        setLoading(false)
       } catch (err: any) {
-        setError(err.message || 'Failed to fetch NFTs')
-      } finally {
+        setError(err.message || 'Failed to initialize display')
         setLoading(false)
       }
     }
     
-    fetchNFTs()
+    initializeDisplay()
     
-    // Listen for account changes
+    // Listen for account changes and network changes
     if (window.ethereum) {
-      window.ethereum.on('accountsChanged', fetchNFTs)
+      const handleAccountsChanged = (accounts: string[]) => {
+        if (accounts.length === 0) {
+          // Wallet disconnected, redirect to connection page
+          router.push('/connection')
+        } else {
+          // Just reset the display with the mock data
+          setNfts(mockNftData)
+        }
+      }
+      
+      const handleChainChanged = () => {
+        // Reload when the network changes
+        ensureSepoliaNetwork().then(onSepolia => {
+          if (onSepolia) {
+            setNfts(mockNftData)
+          }
+        })
+      }
+      
+      window.ethereum.on('accountsChanged', handleAccountsChanged)
+      window.ethereum.on('chainChanged', handleChainChanged)
+      
       return () => {
-        window.ethereum.removeListener('accountsChanged', fetchNFTs)
+        window.ethereum.removeListener('accountsChanged', handleAccountsChanged)
+        window.ethereum.removeListener('chainChanged', handleChainChanged)
       }
     }
-  }, [])
+  }, [walletConnected, router])
   
+  // Don't render the main content until we've confirmed wallet is connected
+  if (!walletConnected) {
+    return (
+      <div className="container max-w-4xl py-10 text-center">
+        <h1 className="text-2xl font-heading font-bold mb-4">Checking wallet connection...</h1>
+        <div className="flex justify-center">
+          <RefreshCw className="h-10 w-10 animate-spin text-primary" />
+        </div>
+      </div>
+    )
+  }
+  
+  // Rest of your component remains the same
   const handleContinue = () => {
     if (selectedNft !== null) {
       // In a real app, you would save the selected NFT to state or pass it to the next page
@@ -171,117 +244,22 @@ export default function SelectNFT() {
     }
   }
   
-  const refreshNFTs = () => {
+  const refreshNFTs = async () => {
     setLoading(true)
     setError(null)
-    setNfts([])
-    setSelectedNft(null)
     
-    // Use setTimeout to give visual feedback that refresh is happening
+    // Ensure we're on Sepolia before refreshing
+    const onSepolia = await ensureSepoliaNetwork()
+    if (!onSepolia) {
+      setLoading(false)
+      return
+    }
+    
+    // Simply simulate a reload with a brief loading state
     setTimeout(() => {
-      // Re-run the effect to fetch NFTs
-      const connected = checkConnection()
-      if (connected) {
-        fetchNFTs()
-      }
-    }, 500)
-  }
-  
-  async function checkConnection() {
-    if (typeof window.ethereum === 'undefined') {
-      setError('MetaMask is not installed. Please go back and connect your wallet.')
+      setNfts([...mockNftData]) // Create a new array reference to trigger re-render
       setLoading(false)
-      return false
-    }
-    
-    try {
-      const accounts = await window.ethereum.request({ method: 'eth_accounts' })
-      if (accounts.length === 0) {
-        setError('No wallet connected. Please go back and connect your MetaMask wallet.')
-        setLoading(false)
-        return false
-      }
-      return true
-    } catch (err: any) {
-      setError(err.message || 'Failed to check wallet connection')
-      setLoading(false)
-      return false
-    }
-  }
-  
-  async function fetchNFTs() {
-    try {
-      setLoading(true)
-      
-      // Get the current wallet address
-      const accounts = await window.ethereum.request({ method: 'eth_accounts' })
-      const address = accounts[0]
-      
-      // Create ethers provider from MetaMask
-      const provider = new ethers.providers.Web3Provider(window.ethereum)
-      
-      // For demo purposes with example contracts
-      const erc1155Contracts = [
-        "0x76BE3b62873462d2142405439777e971754E8E77",
-        "0x495f947276749Ce646f68AC8c248420045cb7b5e"
-      ]
-      
-      const nftData = []
-      
-      for (const contractAddress of erc1155Contracts) {
-        const contract = new ethers.Contract(
-          contractAddress,
-          ERC1155_INTERFACE,
-          provider
-        )
-        
-        // Mock token IDs for demonstration
-        const mockTokenIds = ["1", "2", "3"]
-        const accounts = mockTokenIds.map(() => address)
-        const tokenIds = mockTokenIds.map(id => ethers.BigNumber.from(id))
-        
-        const balances = await contract.balanceOfBatch(accounts, tokenIds)
-        
-        for (let i = 0; i < mockTokenIds.length; i++) {
-          const balance = balances[i]
-          if (balance.gt(0)) {
-            const tokenId = mockTokenIds[i]
-            let uri = ""
-            let metadata = {}
-            
-            try {
-              uri = await contract.uri(tokenId)
-              const formattedUri = uri.replace('ipfs://', 'https://ipfs.io/ipfs/')
-              const tokenIdHex = ethers.utils.hexZeroPad(ethers.BigNumber.from(tokenId).toHexString(), 32).slice(2)
-              const fullUri = formattedUri.replace('{id}', tokenIdHex)
-              
-              const response = await fetch(fullUri)
-              if (response.ok) {
-                metadata = await response.json()
-              }
-            } catch (e) {
-              console.error("Failed to fetch metadata for token", tokenId, e)
-              metadata = { name: `Token #${tokenId}`, description: "Metadata unavailable" }
-            }
-            
-            nftData.push({
-              contractAddress,
-              tokenId,
-              balance: balance.toString(),
-              metadata,
-              uri
-            })
-          }
-        }
-      }
-      
-      setNfts(nftData)
-      
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch NFTs')
-    } finally {
-      setLoading(false)
-    }
+    }, 800)
   }
   
   return (
@@ -298,16 +276,25 @@ export default function SelectNFT() {
           <h1 className="text-3xl font-heading font-bold">Select an NFT</h1>
         </div>
         
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-2"
-          onClick={refreshNFTs}
-          disabled={loading}
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-4">
+          {networkName && (
+            <div className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 text-xs rounded-full flex items-center">
+              <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+              {networkName}
+            </div>
+          )}
+          
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={refreshNFTs}
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
       
       {error && (
@@ -319,12 +306,13 @@ export default function SelectNFT() {
       )}
       
       <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">ERC-1155 NFTs in Your Wallet</h2>
+        <h2 className="text-xl font-semibold mb-2">ERC-1155 NFTs in Your Wallet (Sepolia)</h2>
         <p className="text-muted-foreground">
-          Select an NFT to bridge from Ethereum to Solana
+          Select an NFT to bridge from Ethereum Sepolia to Solana
         </p>
       </div>
       
+      {/* Rest of your component remains the same... */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(3)].map((_, i) => (
@@ -377,8 +365,8 @@ export default function SelectNFT() {
         </div>
       ) : (
         <div className="text-center py-12 border rounded-lg bg-muted/20">
-          <p className="text-muted-foreground mb-2">No ERC-1155 NFTs found in your wallet</p>
-          <p className="text-sm">Make sure your wallet contains ERC-1155 tokens or try refreshing</p>
+          <p className="text-muted-foreground mb-2">No ERC-1155 NFTs found in your wallet on Sepolia</p>
+          <p className="text-sm">Make sure your wallet contains ERC-1155 tokens on Sepolia or try refreshing</p>
         </div>
       )}
       

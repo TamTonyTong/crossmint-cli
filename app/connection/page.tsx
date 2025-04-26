@@ -91,12 +91,12 @@ export default function ConnectWallet() {
               <CardTitle className="text-xl">Ethereum Wallet</CardTitle>
               {ethereumConnected && <Badge className="bg-green-500">Connected</Badge>}
             </div>
-            <CardDescription>Connect your MetaMask wallet to burn NFTs on Ethereum</CardDescription>
+            <CardDescription>Connect your MetaMask wallet to burn NFTs</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-center p-6 border rounded-lg bg-slate-50 dark:bg-slate-900/30">
               <img 
-                src="/metamask-fox.svg" 
+                src="/MetaMask_Fox.png" 
                 alt="MetaMask" 
                 className="h-24"
                 onError={(e) => e.currentTarget.src = "https://cdn.worldvectorlogo.com/logos/metamask.svg"}
