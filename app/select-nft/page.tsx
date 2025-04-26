@@ -124,45 +124,13 @@ export default function SelectNFT() {
       tokenId: "1",
       balance: "1",
       metadata: {
-        name: "Example NFT #1",
+        name: "FireSword",
         description: "This is a mock NFT for development",
-        image: "https://picsum.photos/seed/nft1/400/400"
+        image: "https://i.ibb.co/4n302qh6/1.jpg",
       },
       uri: "https://example.com/mock/1"
     },
-    {
-      contractAddress: "0x76BE3b62873462d2142405439777e971754E8E77",
-      tokenId: "2",
-      balance: "3",
-      metadata: {
-        name: "Collector's Edition NFT",
-        description: "A rare mock NFT for front-end testing",
-        image: "https://picsum.photos/seed/nft2/400/400"
-      },
-      uri: "https://example.com/mock/2"
-    },
-    {
-      contractAddress: "0x495f947276749Ce646f68AC8c248420045cb7b5e",
-      tokenId: "3",
-      balance: "2",
-      metadata: {
-        name: "Development Asset #42",
-        description: "Mock NFT asset for UI development",
-        image: "https://picsum.photos/seed/nft3/400/400"
-      },
-      uri: "https://example.com/mock/3"
-    },
-    {
-      contractAddress: "0x495f947276749Ce646f68AC8c248420045cb7b5e",
-      tokenId: "4",
-      balance: "1",
-      metadata: {
-        name: "Front-end Test NFT",
-        description: "Another mock NFT for UI testing",
-        image: "https://picsum.photos/seed/nft4/400/400"
-      },
-      uri: "https://example.com/mock/4"
-    }
+    
   ]
   
   useEffect(() => {

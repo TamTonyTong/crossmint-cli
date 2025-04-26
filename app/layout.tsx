@@ -17,9 +17,9 @@ const fontHeading = FontHeading({
 })
 
 export const metadata = {
-  title: "CrossMint CLI - Bridge NFTs Between Ethereum & Solana",
+  title: "EverNFTs - Bridge NFTs",
   description:
-    "A powerful command-line tool for burning NFTs on Ethereum, minting on Solana, and tracking provenance across chains.",
+    "A powerful tool for burning NFTs on Ethereum, minting on Solana, and tracking provenance across chains.",
 }
 
 import { ReactNode } from "react";

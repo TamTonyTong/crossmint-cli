@@ -11,7 +11,7 @@ export default function Home() {
           <div className="flex gap-6 md:gap-10">
             <Link href="/" className="flex items-center space-x-2">
               <Command className="h-6 w-6" />
-              <span className="inline-block font-bold">CrossMint CLI</span>
+              <span className="inline-block font-bold">EverNFTs</span>
             </Link>
             <nav className="hidden gap-6 md:flex">
               <Link
@@ -61,13 +61,15 @@ export default function Home() {
               </span>
             </h1>
             <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
-              CrossMint CLI is a powerful command-line tool that lets you burn NFTs on Ethereum, mint upgraded versions
+              EverNFTs is a powerful tool that lets you burn NFTs on Ethereum, mint upgraded versions
               on Solana, and track provenance across chains.
             </p>
             <div className="space-x-4">
+              <Link href="/connection">
               <Button size="lg" className="gap-2">
-                Install Now <ArrowRight className="h-4 w-4" />
+                Bridge Now <ArrowRight className="h-4 w-4" />
               </Button>
+              </Link>
               <Button size="lg" variant="outline">
                 View Documentation
               </Button>
@@ -78,7 +80,7 @@ export default function Home() {
           <div className="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center">
             <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-5xl">Key Features</h2>
             <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-              CrossMint CLI provides a seamless experience for managing your NFTs across different blockchains.
+              EverNFTs provides a seamless experience for managing your NFTs across different blockchains.
             </p>
           </div>
           <div className="mx-auto grid justify-center gap-4 sm:grid-cols-2 md:max-w-[64rem] md:grid-cols-3">
@@ -124,7 +126,7 @@ export default function Home() {
           <div className="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center">
             <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-5xl">How It Works</h2>
             <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-              CrossMint CLI simplifies the process of moving your NFTs across chains in just a few steps.
+              EverNFTs simplifies the process of moving your NFTs across chains in just a few steps.
             </p>
           </div>
           <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-2">
@@ -170,7 +172,7 @@ export default function Home() {
           <div className="mx-auto max-w-[58rem] space-y-6 text-center">
             <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-5xl">Ready to Bridge Your NFTs?</h2>
             <p className="leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-              Get started with CrossMint CLI today and unlock the full potential of your digital assets.
+              Get started with EverNFTs today and unlock the full potential of your digital assets.
             </p>
             <div className="flex justify-center gap-4">
               <Button size="lg" className="gap-2">
@@ -186,7 +188,7 @@ export default function Home() {
       <footer className="border-t py-6 md:py-0">
         <div className="container flex flex-col items-center justify-between gap-4 md:h-16 md:flex-row">
           <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-            © 2024 CrossMint CLI. All rights reserved.
+            © 2024 EverNFTs. All rights reserved.
           </p>
           <div className="flex gap-4">
             <Link
