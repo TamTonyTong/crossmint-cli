@@ -272,14 +272,24 @@ export default function BridgePage() {
               )}
               
               {/* Action Button */}
-              {(bridgeStatus === BridgeStatus.IDLE || bridgeStatus === BridgeStatus.COMPLETED) && (
+              {bridgeStatus === BridgeStatus.IDLE && (
                 <button
                   onClick={startBridge}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors"
                   disabled={!selectedNFT}
                 >
-                  {bridgeStatus === BridgeStatus.COMPLETED ? "Bridge Again" : `Bridge ${selectedNFT ? selectedNFT.metadata?.name || 'NFT' : 'Tokens'}`}
+                  {`Bridge ${selectedNFT ? selectedNFT.metadata?.name || 'NFT' : 'Tokens'}`}
                 </button>
+              )}
+
+              {bridgeStatus === BridgeStatus.COMPLETED && (
+                <Link href="/" className="block w-full">
+                  <button
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-colors"
+                  >
+                    Return to Home
+                  </button>
+                </Link>
               )}
               
               {bridgeStatus !== BridgeStatus.IDLE && bridgeStatus !== BridgeStatus.COMPLETED && (

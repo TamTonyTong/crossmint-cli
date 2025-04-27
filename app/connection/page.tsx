@@ -65,16 +65,20 @@ export default function ConnectWallet() {
 
   return (
     <div className="container max-w-4xl py-10">
-      <div className="flex items-center mb-8">
-        <Link 
-          href="/"
-          className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mr-4"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Home
-        </Link>
-        <h1 className="text-3xl font-heading font-bold">Connect Your Wallets</h1>
-      </div>
+      <div className="flex items-center mb-8 relative w-full">
+  <div className="absolute left-0">
+    <Link 
+      href="/"
+      className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground"
+    >
+      <ArrowLeft className="mr-2 h-4 w-4" />
+      Back to Home
+    </Link>
+  </div>
+  <div className="w-full flex justify-center">
+    <h1 className="text-3xl font-heading font-bold">Connect Your Wallets</h1>
+  </div>
+</div>
 
       {error && (
         <Alert variant="destructive" className="mb-6">
