@@ -117,7 +117,7 @@ export default function BridgePage() {
     <div className="min-h-screen bg-gray-900 text-white p-4 flex justify-center">
       <div className="max-w-lg w-full">
         <div className="flex items-center mb-6">
-          <Link href="/select" className="text-blue-400 hover:text-blue-300 flex items-center mr-4">
+          <Link href="/select-nft" className="text-blue-400 hover:text-blue-300 flex items-center mr-4">
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to Selection
           </Link>
