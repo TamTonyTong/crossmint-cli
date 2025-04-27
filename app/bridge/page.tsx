@@ -37,12 +37,12 @@ interface NFT {
 
 export default function BridgePage() {
   const [isWalletConnected, setIsWalletConnected] = useState(false);
-  const [sourceChain, setSourceChain] = useState(chains[0]);
-  const [destinationChain, setDestinationChain] = useState(chains[1]);
-  const [amount, setAmount] = useState("");
+  const [sourceChain, setSourceChain] = useState(chains[0]); // Ethereum (Sepolia)
+  const [destinationChain, setDestinationChain] = useState(chains[2]); // Default to Solana
   const [bridgeStatus, setBridgeStatus] = useState<BridgeStatus>(BridgeStatus.IDLE);
   const [txHash, setTxHash] = useState("");
   const [selectedNFT, setSelectedNFT] = useState<NFT | null>(null);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
   // Check wallet connection and load selected NFT
   useEffect(() => {
@@ -55,9 +55,6 @@ export default function BridgePage() {
       if (storedNFT) {
         const parsedNFT = JSON.parse(storedNFT);
         setSelectedNFT(parsedNFT);
-        
-        // Automatically set source chain to Ethereum (Sepolia)
-        setSourceChain(chains[0]); // Assuming Ethereum is first in the chains array
       }
     } catch (error) {
       console.error("Error loading selected NFT:", error);
@@ -66,26 +63,13 @@ export default function BridgePage() {
 
   // Mock wallet connection
   const connectWallet = async () => {
-    // In a real application, we would use a wallet adapter/connector
     setTimeout(() => {
       setIsWalletConnected(true);
     }, 1000);
   };
 
-  // Swap source and destination chains
-  const swapChains = () => {
-    const temp = sourceChain;
-    setSourceChain(destinationChain);
-    setDestinationChain(temp);
-  };
-
-  // Mock bridge process
+  // Mock bridge process - automatically bridges the NFT
   const startBridge = async () => {
-    if (selectedNFT && (!amount || parseFloat(amount) <= 0 || parseFloat(amount) > parseInt(selectedNFT.balance))) {
-      alert("Please enter a valid amount not exceeding your balance");
-      return;
-    }
-
     // Simulate burn transaction
     setBridgeStatus(BridgeStatus.BURNING);
     await mockDelay(2000);
@@ -105,12 +89,20 @@ export default function BridgePage() {
     
     // Complete the bridge
     setBridgeStatus(BridgeStatus.COMPLETED);
+    
+    // Show success alert
+    setShowSuccessAlert(true);
+    
+    // Auto-hide success alert after 5 seconds
+    setTimeout(() => {
+      setShowSuccessAlert(false);
+    }, 5000);
   };
 
   const resetBridge = () => {
-    setAmount("");
     setBridgeStatus(BridgeStatus.IDLE);
     setTxHash("");
+    setShowSuccessAlert(false);
   };
 
   const mockDelay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -143,6 +135,19 @@ export default function BridgePage() {
           </div>
         ) : (
           <div className="bg-gray-800 rounded-xl p-6 shadow-lg">
+            {/* Success Alert */}
+            {showSuccessAlert && (
+              <div className="mb-6 bg-green-900/30 border border-green-700 rounded-lg p-4 text-center">
+                <p className="text-green-400 font-bold">Bridge Completed Successfully!</p>
+                <p className="text-sm text-gray-300 mt-1">
+                  {selectedNFT 
+                    ? `${selectedNFT.metadata?.name || 'NFT'} has been bridged to ${destinationChain.name}`
+                    : `Tokens have been bridged to ${destinationChain.name}`
+                  }
+                </p>
+              </div>
+            )}
+            
             {/* Selected NFT Display */}
             {selectedNFT && (
               <div className="mb-6 bg-gray-700 rounded-lg p-4">
@@ -177,28 +182,13 @@ export default function BridgePage() {
               <div className="flex items-center justify-between mb-4">
                 <div className="w-5/12">
                   <label className="block text-sm text-gray-400 mb-2">From</label>
-                  <select 
-                    className="w-full bg-gray-700 rounded-lg p-3 outline-none"
-                    value={sourceChain.id}
-                    onChange={(e) => setSourceChain(chains.find(c => c.id === parseInt(e.target.value)) || chains[0])}
-                    disabled={selectedNFT !== null} // Disable if NFT is selected (locked to Ethereum)
-                  >
-                    {chains.map((chain) => (
-                      <option key={chain.id} value={chain.id}>
-                        {chain.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="w-full bg-gray-700 rounded-lg p-3 text-white">
+                    {sourceChain.name} (Sepolia)
+                  </div>
                 </div>
                 
                 <div className="flex items-center justify-center">
-                  <button 
-                    onClick={swapChains}
-                    className="bg-gray-700 p-2 rounded-full hover:bg-gray-600"
-                    disabled={selectedNFT !== null} // Disable if NFT is selected
-                  >
-                    ⇄
-                  </button>
+                  <div className="p-2">→</div>
                 </div>
                 
                 <div className="w-5/12">
@@ -206,9 +196,10 @@ export default function BridgePage() {
                   <select 
                     className="w-full bg-gray-700 rounded-lg p-3 outline-none"
                     value={destinationChain.id}
-                    onChange={(e) => setDestinationChain(chains.find(c => c.id === parseInt(e.target.value)) || chains[1])}
+                    onChange={(e) => setDestinationChain(chains.find(c => c.id === parseInt(e.target.value)) || chains[2])}
+                    disabled={bridgeStatus !== BridgeStatus.IDLE && bridgeStatus !== BridgeStatus.COMPLETED}
                   >
-                    {chains.map((chain) => (
+                    {chains.filter(chain => chain.id !== sourceChain.id).map((chain) => (
                       <option key={chain.id} value={chain.id}>
                         {chain.name}
                       </option>
@@ -217,32 +208,8 @@ export default function BridgePage() {
                 </div>
               </div>
               
-              {/* Amount Input - Only show if no NFT is selected or NFT has multiple balance */}
-              {(!selectedNFT || parseInt(selectedNFT.balance) > 1) && (
-                <div className="mb-6">
-                  <label className="block text-sm text-gray-400 mb-2">
-                    {selectedNFT ? "Quantity to Bridge" : "Amount"}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      placeholder="0.0"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      disabled={bridgeStatus !== BridgeStatus.IDLE && bridgeStatus !== BridgeStatus.COMPLETED}
-                      className="w-full bg-gray-700 rounded-lg p-3 pr-16 outline-none"
-                      min="1"
-                      max={selectedNFT ? selectedNFT.balance : undefined}
-                    />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                      {selectedNFT ? "NFT" : sourceChain.token}
-                    </div>
-                  </div>
-                </div>
-              )}
-              
               {/* Bridge Status */}
-              {bridgeStatus !== BridgeStatus.IDLE && (
+              {bridgeStatus !== BridgeStatus.IDLE && bridgeStatus !== BridgeStatus.COMPLETED && (
                 <div className="mb-6 p-4 bg-gray-700 rounded-lg">
                   <h3 className="font-semibold mb-2">Bridge Status</h3>
                   <div className="space-y-2">
@@ -251,8 +218,8 @@ export default function BridgePage() {
                         bridgeStatus === BridgeStatus.BURNING || 
                         bridgeStatus === BridgeStatus.CONFIRMING_BURN || 
                         bridgeStatus === BridgeStatus.MINTING ||
-                        bridgeStatus === BridgeStatus.CONFIRMING_MINT ||
-                        bridgeStatus === BridgeStatus.COMPLETED ? 'bg-green-500' : 'bg-gray-500'
+                        bridgeStatus === BridgeStatus.CONFIRMING_MINT 
+                         ? 'bg-green-500' : 'bg-gray-500'
                       }`}></div>
                       <span>Initiating Bridge</span>
                     </div>
@@ -261,8 +228,8 @@ export default function BridgePage() {
                       <div className={`w-4 h-4 rounded-full mr-3 ${
                         bridgeStatus === BridgeStatus.CONFIRMING_BURN || 
                         bridgeStatus === BridgeStatus.MINTING ||
-                        bridgeStatus === BridgeStatus.CONFIRMING_MINT ||
-                        bridgeStatus === BridgeStatus.COMPLETED ? 'bg-green-500' : 
+                        bridgeStatus === BridgeStatus.CONFIRMING_MINT 
+                         ? 'bg-green-500' : 
                         bridgeStatus === BridgeStatus.BURNING ? 'bg-yellow-500 animate-pulse' : 'bg-gray-500'
                       }`}></div>
                       <span>Burning on {sourceChain.name}</span>
@@ -271,8 +238,8 @@ export default function BridgePage() {
                     <div className="flex items-center">
                       <div className={`w-4 h-4 rounded-full mr-3 ${
                         bridgeStatus === BridgeStatus.MINTING ||
-                        bridgeStatus === BridgeStatus.CONFIRMING_MINT ||
-                        bridgeStatus === BridgeStatus.COMPLETED ? 'bg-green-500' : 
+                        bridgeStatus === BridgeStatus.CONFIRMING_MINT 
+                        ? 'bg-green-500' : 
                         bridgeStatus === BridgeStatus.CONFIRMING_BURN ? 'bg-yellow-500 animate-pulse' : 'bg-gray-500'
                       }`}></div>
                       <span>Confirming Burn Transaction</span>
@@ -280,8 +247,7 @@ export default function BridgePage() {
                     
                     <div className="flex items-center">
                       <div className={`w-4 h-4 rounded-full mr-3 ${
-                        bridgeStatus === BridgeStatus.CONFIRMING_MINT ||
-                        bridgeStatus === BridgeStatus.COMPLETED ? 'bg-green-500' : 
+                        bridgeStatus === BridgeStatus.CONFIRMING_MINT  ? 'bg-green-500' : 
                         bridgeStatus === BridgeStatus.MINTING ? 'bg-yellow-500 animate-pulse' : 'bg-gray-500'
                       }`}></div>
                       <span>Minting on {destinationChain.name}</span>
@@ -289,7 +255,7 @@ export default function BridgePage() {
                     
                     <div className="flex items-center">
                       <div className={`w-4 h-4 rounded-full mr-3 ${
-                        bridgeStatus === BridgeStatus.COMPLETED ? 'bg-green-500' : 
+                        // bridgeStatus === BridgeStatus.COMPLETED ? 'bg-green-500' : 
                         bridgeStatus === BridgeStatus.CONFIRMING_MINT ? 'bg-yellow-500 animate-pulse' : 'bg-gray-500'
                       }`}></div>
                       <span>Confirming Mint Transaction</span>
@@ -306,33 +272,14 @@ export default function BridgePage() {
               )}
               
               {/* Action Button */}
-              {bridgeStatus === BridgeStatus.IDLE && (
+              {(bridgeStatus === BridgeStatus.IDLE || bridgeStatus === BridgeStatus.COMPLETED) && (
                 <button
                   onClick={startBridge}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors"
+                  disabled={!selectedNFT}
                 >
-                  Bridge {selectedNFT ? (amount ? `${amount} ` : '1 ') + `${selectedNFT.metadata?.name || 'NFT'}` : amount ? `${amount} ${sourceChain.token}` : 'Tokens'}
+                  {bridgeStatus === BridgeStatus.COMPLETED ? "Bridge Again" : `Bridge ${selectedNFT ? selectedNFT.metadata?.name || 'NFT' : 'Tokens'}`}
                 </button>
-              )}
-              
-              {bridgeStatus === BridgeStatus.COMPLETED && (
-                <div className="space-y-4">
-                  <div className="bg-green-900/30 border border-green-700 rounded-lg p-4 text-center">
-                    <p className="text-green-400">Bridge Completed Successfully!</p>
-                    <p className="text-sm text-gray-300 mt-1">
-                      {selectedNFT 
-                        ? `${amount || '1'} ${selectedNFT.metadata?.name || 'NFT'} has been bridged to ${destinationChain.name}`
-                        : `${amount} ${sourceChain.token} has been bridged to ${destinationChain.name}`
-                      }
-                    </p>
-                  </div>
-                  <button
-                    onClick={resetBridge}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors"
-                  >
-                    Bridge More Tokens
-                  </button>
-                </div>
               )}
               
               {bridgeStatus !== BridgeStatus.IDLE && bridgeStatus !== BridgeStatus.COMPLETED && (
